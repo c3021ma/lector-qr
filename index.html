@@ -1,0 +1,65 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+  <meta http-equiv="Content-Style-Type" content="text/css">
+  <title></title>
+  <meta name="Generator" content="Cocoa HTML Writer">
+  <meta name="CocoaVersion" content="2113.65">
+  <style type="text/css">
+    p.p1 {margin: 0.0px 0.0px 0.0px 0.0px; font: 12.0px Times; color: #000000; -webkit-text-stroke: #000000}
+    p.p2 {margin: 0.0px 0.0px 0.0px 0.0px; font: 12.0px Times; color: #000000; -webkit-text-stroke: #000000; min-height: 14.0px}
+    span.s1 {font-kerning: none}
+  </style>
+</head>
+<body>
+<p class="p1"><span class="s1">&lt;!DOCTYPE html&gt;</span></p>
+<p class="p1"><span class="s1">&lt;html lang="es"&gt;</span></p>
+<p class="p1"><span class="s1">&lt;head&gt;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>&lt;meta charset="UTF-8"&gt;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>&lt;meta name="viewport" content="width=device-width, initial-scale=1.0"&gt;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>&lt;title&gt;QR Scanner Pro&lt;/title&gt;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>&lt;link rel="manifest" href="manifest.json"&gt;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>&lt;meta name="theme-color" content="#007bff"&gt;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>&lt;style&gt;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; margin: 0; background-color: #f8f9fa; }</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>.container { width: 90%; max-width: 500px; text-align: center; }</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>#reader { border: none; border-radius: 15px; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.1); background: white; }</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>#resultado { margin-top: 20px; padding: 20px; background: white; border-radius: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); word-break: break-all; min-height: 50px; }</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>h1 { color: #333; font-size: 1.5rem; }</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>&lt;/style&gt;</span></p>
+<p class="p1"><span class="s1">&lt;/head&gt;</span></p>
+<p class="p1"><span class="s1">&lt;body&gt;</span></p>
+<p class="p2"><span class="s1"></span><br></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>&lt;div class="container"&gt;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>&lt;h1&gt;Escáner QR&lt;/h1&gt;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>&lt;div id="reader"&gt;&lt;/div&gt;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>&lt;div id="resultado"&gt;Esperando código...&lt;/div&gt;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>&lt;/div&gt;</span></p>
+<p class="p2"><span class="s1"></span><br></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>&lt;script src="https://unpkg.com"&gt;&lt;/script&gt;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>&lt;script&gt;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>// Lógica del Escáner</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>function onScanSuccess(decodedText) {</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>document.getElementById('resultado').innerHTML = `&lt;strong&gt;Resultado:&lt;/strong&gt; &lt;br&gt; ${decodedText}`;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>if (decodedText.startsWith("http")) {</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                </span>if(confirm("¿Deseas abrir este enlace? \n" + decodedText)) {</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                    </span>window.location.href = decodedText;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                </span>}</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>}</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>}</span></p>
+<p class="p2"><span class="s1"></span><br></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>let html5QrcodeScanner = new Html5QrcodeScanner("reader", { fps: 10, qrbox: 250 });</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>html5QrcodeScanner.render(onScanSuccess);</span></p>
+<p class="p2"><span class="s1"></span><br></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>// Registro del Service Worker para PWA</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>if ('serviceWorker' in navigator) {</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>window.addEventListener('load', () =&gt; {</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                </span>navigator.serviceWorker.register('./sw.js');</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>});</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>}</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>&lt;/script&gt;</span></p>
+<p class="p1"><span class="s1">&lt;/body&gt;</span></p>
+<p class="p1"><span class="s1">&lt;/html&gt;</span></p>
+</body>
+</html>
