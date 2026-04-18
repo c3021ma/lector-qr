@@ -3,56 +3,71 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Aforo Piscina 2026</title>
+    <title>QR Scanner Pro</title>
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#007bff">
     <style>
         body { font-family: sans-serif; display: flex; flex-direction: column; align-items: center; padding: 20px; background-color: #f4f4f9; }
         .container { width: 100%; max-width: 500px; text-align: center; }
-        #reader { width: 100%; border-radius: 10px; overflow: hidden; background: #000; }
-        #resultado { margin-top: 20px; padding: 15px; background: white; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); min-height: 40px; word-break: break-all; }
-        .btn-inicio { padding: 12px 24px; font-size: 16px; background: #007bff; color: white; border: none; border-radius: 5px; cursor: pointer; margin-bottom: 10px; }
+        #reader { width: 100%; min-height: 250px; border-radius: 10px; overflow: hidden; background: #000; margin-top: 10px; }
+        #resultado { margin-top: 20px; padding: 15px; background: white; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); word-break: break-all; }
+        .btn-inicio { padding: 15px 30px; font-size: 18px; background: #007bff; color: white; border: none; border-radius: 8px; cursor: pointer; width: 100%; }
+        #debug-log { margin-top: 10px; font-size: 12px; color: red; text-align: left; width: 100%; }
     </style>
 </head>
 <body>
 
     <div class="container">
         <h1>Escáner QR</h1>
-        <button id="btn-start" class="btn-inicio">Iniciar Cámara</button>
+        <button id="btn-start" class="btn-inicio">ACTIVAR CÁMARA</button>
         <div id="reader"></div>
-        <div id="resultado">La cámara aparecerá aquí...</div>
+        <div id="resultado">Estado: Esperando activación...</div>
+        <div id="debug-log"></div> <!-- Para ver errores técnicos -->
     </div>
 
-    <!-- Cargamos la librería -->
     <script src="https://unpkg.com"></script>
     <script>
-        const html5QrCode = new Html5Qrcode("reader");
-        const qrConfig = { fps: 10, qrbox: { width: 250, height: 250 } };
+        const debug = document.getElementById('debug-log');
+        const resultado = document.getElementById('resultado');
+
+        function logError(msg) {
+            debug.innerHTML += `<div>> ${msg}</div>`;
+        }
 
         const onScanSuccess = (decodedText) => {
-            document.getElementById('resultado').innerHTML = `<strong>Leído:</strong> ${decodedText}`;
-            // Si es un link, preguntar si abrirlo
+            resultado.innerHTML = `<strong>Leído:</strong> ${decodedText}`;
             if (decodedText.startsWith("http")) {
                 if(confirm("Abrir enlace: " + decodedText)) window.location.href = decodedText;
             }
         };
 
         document.getElementById('btn-start').addEventListener('click', () => {
-            // Intentar iniciar directamente con la cámara trasera ("environment")
-            html5QrCode.start({ facingMode: "environment" }, qrConfig, onScanSuccess)
+            resultado.innerText = "Iniciando...";
+            const html5QrCode = new Html5Qrcode("reader");
+            
+            // Intentamos iniciar con una configuración más flexible
+            html5QrCode.start(
+                { facingMode: "environment" }, 
+                { fps: 10, qrbox: 250 },
+                onScanSuccess
+            )
             .then(() => {
                 document.getElementById('btn-start').style.display = 'none';
-                document.getElementById('resultado').innerText = "Buscando código QR...";
+                resultado.innerText = "Buscando código QR...";
             })
             .catch(err => {
-                console.error("Error al iniciar cámara:", err);
-                alert("No se pudo acceder a la cámara. Revisa los permisos de HTTPS.");
+                logError(err); // Aquí aparecerá el error real si no abre
+                resultado.innerText = "Error al abrir cámara.";
+                
+                // Intento de rescate: si falla la trasera, probar cualquier cámara disponible
+                logError("Reintentando con cualquier cámara...");
+                html5QrCode.start({ facingMode: "user" }, { fps: 10, qrbox: 250 }, onScanSuccess)
+                .catch(err2 => logError("Fallo total: " + err2));
             });
         });
 
-        // Registro de Service Worker
         if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => { navigator.serviceWorker.register('./sw.js'); });
+            navigator.serviceWorker.register('./sw.js').catch(e => console.error(e));
         }
     </script>
 </body>
