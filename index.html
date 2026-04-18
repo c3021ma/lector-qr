@@ -3,70 +3,113 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Control de Aforo 2026</title>
-    <link rel="manifest" href="manifest.json">
-    <meta name="theme-color" content="#007bff">
-    
+    <title>Aforo Piscina 2026</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
     <style>
-        body { font-family: -apple-system, sans-serif; text-align: center; padding: 20px; background: #f0f2f5; color: #1c1e21; }
-        #reader { width: 100%; max-width: 450px; margin: 20px auto; background: #000; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.15); }
-        .btn { padding: 16px 32px; background: #007bff; color: white; border: none; border-radius: 50px; font-size: 18px; font-weight: bold; cursor: pointer; transition: transform 0.2s; }
-        .btn:active { transform: scale(0.95); }
-        #status { margin-top: 20px; font-weight: 500; color: #65676b; }
-        #result-box { margin-top: 15px; padding: 15px; display: none; background: #d4edda; color: #155724; border-radius: 8px; border: 1px solid #c3e6cb; }
+        body { background: #f4f7f6; padding-bottom: 50px; }
+        #reader { width: 100%; max-width: 400px; margin: auto; border-radius: 15px; overflow: hidden; }
+        .capacity-badge { font-size: 2rem; font-weight: bold; padding: 20px; border-radius: 15px; margin-bottom: 20px; }
+        .status-in { background: #d4edda; color: #155724; }
+        .status-full { background: #f8d7da; color: #721c24; }
+        .person-card { cursor: pointer; transition: 0.2s; }
+        .person-card:hover { background: #e9ecef; }
     </style>
 </head>
 <body>
-    <h1>Aforo Piscina 2026</h1>
-    <p>Escanea el código del usuario para validar acceso.</p>
+
+<div class="container mt-4 text-center">
+    <h2 class="mb-3">Aforo Piscina 2026</h2>
     
-    <button id="start-btn" class="btn">ENCENDER CÁMARA</button>
+    <div id="capacity-indicator" class="capacity-badge status-in">
+        Cargando...
+    </div>
+
+    <div class="btn-group w-100 mb-4" role="group">
+        <input type="radio" class="btn-check" name="mode" id="mode-in" value="entrada" checked>
+        <label class="btn btn-outline-primary p-3" for="mode-in">📥 ENTRADA</label>
+        
+        <input type="radio" class="btn-check" name="mode" id="mode-out" value="salida">
+        <label class="btn btn-outline-danger p-3" for="mode-out">📤 SALIDA</label>
+    </div>
+
+    <div id="reader-container">
+        <div id="reader"></div>
+        <p class="text-muted mt-2">Enfoca el código QR del carnet</p>
+    </div>
+
+    <div id="list-container" class="mt-4" style="display:none;">
+        <h4>Personas en el recinto</h4>
+        <div id="people-list" class="list-group mt-3 text-start">
+            </div>
+    </div>
+</div>
+
+<script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+<script>
+    // URL DE TU SCRIPT DE GOOGLE (Cópiala de 'Implementar Web App')
+    const WEB_APP_URL = "TU_URL_DE_GOOGLE_SCRIPT_AQUI";
     
-    <div id="reader"></div>
-    <div id="result-box"></div>
-    <div id="status">Estado: Listo para escanear</div>
+    let currentMode = "entrada";
+    let html5QrCode = new Html5Qrcode("reader");
 
-    <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
-    
-    <script>
-        const status = document.getElementById('status');
-        const startBtn = document.getElementById('start-btn');
-        const resultBox = document.getElementById('result-box');
-        let html5QrCode;
-
-        startBtn.addEventListener('click', () => {
-            status.innerText = "Solicitando permiso...";
-            
-            // Inicializar la instancia
-            html5QrCode = new Html5Qrcode("reader");
-
-            const qrCodeSuccessCallback = (decodedText, decodedResult) => {
-                // Acción al detectar QR
-                resultBox.style.display = "block";
-                resultBox.innerText = "Código detectado: " + decodedText;
-                status.innerText = "¡Lectura exitosa!";
-                
-                // Detenemos la cámara tras leer para ahorrar batería (opcional)
-                /* html5QrCode.stop().then(() => {
-                    startBtn.style.display = "block";
-                }); */
-            };
-
-            const config = { fps: 10, qrbox: { width: 250, height: 250 } };
-
-            // Forzamos el uso de la cámara trasera ('environment')
-            html5QrCode.start({ facingMode: "environment" }, config, qrCodeSuccessCallback)
-            .then(() => {
-                status.innerText = "Cámara activa. Escanea el código.";
-                startBtn.style.display = "none";
-            })
-            .catch(err => {
-                status.innerText = "Error: " + err;
-                console.error("Error al iniciar cámara: ", err);
-                // Si la trasera falla (ej. en PC), intentamos con cualquier cámara
-                html5QrCode.start({ facingMode: "user" }, config, qrCodeSuccessCallback);
-            });
+    // Cambiar entre escanear y lista al cambiar modo
+    document.querySelectorAll('input[name="mode"]').forEach(radio => {
+        radio.addEventListener('change', (e) => {
+            currentMode = e.target.value;
+            document.getElementById('list-container').style.display = currentMode === "salida" ? "block" : "none";
+            document.getElementById('reader-container').style.display = currentMode === "entrada" ? "block" : "none";
+            if(currentMode === "entrada") startCamera();
         });
-    </script>
+    });
+
+    // Función para registrar acción en Google Sheets
+    async function registerAction(qrId, action) {
+        try {
+            const response = await fetch(WEB_APP_URL, {
+                method: "POST",
+                body: JSON.stringify({ qrId, action })
+            });
+            const result = await response.json();
+            if (result.success) {
+                alert(`${action.toUpperCase()} registrada: ${qrId}`);
+                updateStatus();
+            } else {
+                alert("ERROR: " + result.msg);
+            }
+        } catch (e) {
+            console.error(e);
+            alert("Error de conexión con el servidor");
+        }
+    }
+
+    // Actualizar datos del servidor
+    async function updateStatus() {
+        const res = await fetch(WEB_APP_URL);
+        const data = await res.json();
+        
+        const badge = document.getElementById('capacity-indicator');
+        badge.innerText = `${data.current} / ${data.max}`;
+        badge.className = `capacity-badge ${data.current >= data.max ? 'status-full' : 'status-in'}`;
+        
+        // Actualizar lista de salida
+        const list = document.getElementById('people-list');
+        list.innerHTML = data.peopleInside.map(id => `
+            <div class="list-group-item person-card d-flex justify-content-between align-items-center" onclick="registerAction('${id}', 'salida')">
+                <span>ID: ${id}</span>
+                <span class="badge bg-danger rounded-pill">Dar salida</span>
+            </div>
+        `).join('') || '<p class="text-center">No hay nadie dentro</p>';
+    }
+
+    function startCamera() {
+        html5QrCode.start({ facingMode: "environment" }, { fps: 10, qrbox: 250 }, (text) => {
+            registerAction(text, currentMode);
+        }).catch(err => console.error(err));
+    }
+
+    // Inicio
+    updateStatus();
+    startCamera();
+</script>
 </body>
 </html>
