@@ -3,54 +3,68 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>QR Final Fix</title>
+    <title>Control de Aforo 2026</title>
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#007bff">
+    
     <style>
-        body { font-family: sans-serif; text-align: center; padding: 20px; background: #fafafa; }
-        #reader { width: 100%; max-width: 400px; margin: auto; background: #000; min-height: 300px; border-radius: 10px; }
-        .btn { padding: 15px 25px; background: #007bff; color: white; border: none; border-radius: 8px; font-size: 18px; cursor: pointer; }
-        #status { margin-top: 20px; padding: 10px; color: #555; }
+        body { font-family: -apple-system, sans-serif; text-align: center; padding: 20px; background: #f0f2f5; color: #1c1e21; }
+        #reader { width: 100%; max-width: 450px; margin: 20px auto; background: #000; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.15); }
+        .btn { padding: 16px 32px; background: #007bff; color: white; border: none; border-radius: 50px; font-size: 18px; font-weight: bold; cursor: pointer; transition: transform 0.2s; }
+        .btn:active { transform: scale(0.95); }
+        #status { margin-top: 20px; font-weight: 500; color: #65676b; }
+        #result-box { margin-top: 15px; padding: 15px; display: none; background: #d4edda; color: #155724; border-radius: 8px; border: 1px solid #c3e6cb; }
     </style>
 </head>
 <body>
-    <h1>Lector QR Pro</h1>
+    <h1>Aforo Piscina 2026</h1>
+    <p>Escanea el código del usuario para validar acceso.</p>
+    
     <button id="start-btn" class="btn">ENCENDER CÁMARA</button>
+    
     <div id="reader"></div>
-    <div id="status">Estado: Listo</div>
+    <div id="result-box"></div>
+    <div id="status">Estado: Listo para escanear</div>
 
-    <!-- Usamos una versión específica de la librería para evitar fallos de carga -->
-    <script src="https://unpkg.com"></script>
+    <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
     
     <script>
         const status = document.getElementById('status');
         const startBtn = document.getElementById('start-btn');
-        let scanner;
+        const resultBox = document.getElementById('result-box');
+        let html5QrCode;
 
         startBtn.addEventListener('click', () => {
-            status.innerText = "Accediendo a hardware...";
+            status.innerText = "Solicitando permiso...";
             
-            // 1. Creamos la instancia
-            scanner = new Html5Qrcode("reader");
+            // Inicializar la instancia
+            html5QrCode = new Html5Qrcode("reader");
 
-            // 2. Definimos qué pasa al leer
-            const onScanSuccess = (text) => {
-                alert("QR Detectado: " + text);
-                if(text.startsWith("http")) window.location.href = text;
+            const qrCodeSuccessCallback = (decodedText, decodedResult) => {
+                // Acción al detectar QR
+                resultBox.style.display = "block";
+                resultBox.innerText = "Código detectado: " + decodedText;
+                status.innerText = "¡Lectura exitosa!";
+                
+                // Detenemos la cámara tras leer para ahorrar batería (opcional)
+                /* html5QrCode.stop().then(() => {
+                    startBtn.style.display = "block";
+                }); */
             };
 
-            // 3. Arrancamos forzando la cámara trasera directamente sin preguntar lista
-            // Esto evita que el navegador se quede "pensando" en la lista de cámaras
-            scanner.start(
-                { facingMode: "environment" }, 
-                { fps: 10, qrbox: { width: 250, height: 250 } },
-                onScanSuccess
-            ).then(() => {
-                status.innerText = "Escaneando en tiempo real...";
+            const config = { fps: 10, qrbox: { width: 250, height: 250 } };
+
+            // Forzamos el uso de la cámara trasera ('environment')
+            html5QrCode.start({ facingMode: "environment" }, config, qrCodeSuccessCallback)
+            .then(() => {
+                status.innerText = "Cámara activa. Escanea el código.";
                 startBtn.style.display = "none";
-            }).catch(err => {
-                status.innerText = "Error crítico: " + err;
-                console.error(err);
-                // Si la trasera falla, intentamos con CUALQUIERA
-                scanner.start({ facingMode: "user" }, { fps: 10, qrbox: 250 }, onScanSuccess);
+            })
+            .catch(err => {
+                status.innerText = "Error: " + err;
+                console.error("Error al iniciar cámara: ", err);
+                // Si la trasera falla (ej. en PC), intentamos con cualquier cámara
+                html5QrCode.start({ facingMode: "user" }, config, qrCodeSuccessCallback);
             });
         });
     </script>
