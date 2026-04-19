@@ -12,11 +12,11 @@
         .card-main { background: #1e1e1e; border-radius: 20px; border: 1px solid #333; }
         #reader { width: 100%; border-radius: 15px; overflow: hidden; display: none; margin-bottom: 20px; background: #000; }
         .capacity-box { font-size: 3.5rem; font-weight: 800; color: #00d1ff; }
-        .btn-qty { width: 65px; height: 65px; font-size: 1.6rem; border-radius: 12px; margin: 5px; font-weight: bold; }
+        .btn-qty { width: 60px; height: 60px; font-size: 1.5rem; border-radius: 12px; margin: 4px; font-weight: bold; }
         .btn-qty.active { background-color: #ffc107 !important; color: #000 !important; border-color: #ffc107 !important; }
         .step-panel { display: none; }
         .step-active { display: block; }
-        .list-group-item { background: #2a2a2a; color: white; border: 1px solid #383838; margin-bottom: 5px; border-radius: 10px !important; cursor: pointer; }
+        .list-group-item { background: #2a2a2a; color: white; border: 1px solid #383838; margin-bottom: 8px; border-radius: 12px !important; cursor: pointer; }
         .badge-qty { font-size: 1.1rem; padding: 10px 15px; }
     </style>
 </head>
@@ -24,70 +24,57 @@
 
 <div class="container py-4 text-center">
     <div class="card-main p-3 mb-4 shadow-lg">
-        <h6 class="text-uppercase text-secondary">Aforo Total Hoy</h6>
+        <h6 class="text-uppercase text-secondary small">Aforo Piscina Hoy</h6>
         <div id="capacity-indicator" class="capacity-box">-- / --</div>
     </div>
 
     <div id="panel-start" class="step-panel step-active">
-        <div class="row g-3">
-            <div class="col-12">
-                <button onclick="openScanner('entrada')" class="btn btn-success w-100 py-4 shadow" style="font-size: 1.3rem;">
-                    📥 ESCANEAR ENTRADA
-                </button>
-            </div>
-        </div>
+        <button onclick="openScanner()" class="btn btn-success w-100 py-4 shadow mb-4" style="font-size: 1.4rem; border-radius: 15px;">
+            📥 ESCANEAR ENTRADA
+        </button>
         
-        <div class="mt-5 text-start">
-            <h6 class="text-secondary ps-2">VIVIENDAS EN EL RECINTO (Toca para opciones):</h6>
-            <div id="people-list" class="list-group"></div>
+        <div class="text-start">
+            <h6 class="text-secondary ps-2 text-uppercase small">Viviendas en el recinto:</h6>
+            <div id="people-list" class="list-group mt-2"></div>
         </div>
 
         <div class="mt-5 pt-4 border-top border-secondary">
             <button onclick="confirmCierre()" class="btn btn-outline-warning w-100 py-3">
-                🌙 FINALIZAR JORNADA (Cierre)
+                🌙 FINALIZAR JORNADA (Reset)
             </button>
         </div>
     </div>
 
     <div id="panel-scan" class="step-panel">
-        <h4 id="scan-title" class="mb-3">Escaneando Entrada...</h4>
+        <h4 id="scan-title" class="mb-3 text-success">Escaneando código...</h4>
         <div id="reader"></div>
-        <button onclick="goBack()" class="btn btn-outline-light w-100 py-3">Cancelar y Volver</button>
+        <button onclick="goBack()" class="btn btn-outline-light w-100 py-3">Volver Atrás</button>
     </div>
 
     <div id="panel-confirm" class="step-panel">
         <div class="card-main p-4 shadow">
             <h4 class="text-info mb-1" id="scanned-id">---</h4>
-            <p id="action-label" class="text-secondary text-uppercase small font-weight-bold"></p>
-            
+            <p id="action-label" class="text-secondary text-uppercase small"></p>
             <hr class="border-secondary">
             
             <div id="qty-section">
                 <p class="mb-2">¿Cuántas personas?</p>
                 <div class="d-flex flex-wrap justify-content-center mb-3">
-                    <button onclick="setQty(1, this)" class="btn btn-outline-primary btn-qty">1</button>
-                    <button onclick="setQty(2, this)" class="btn btn-outline-primary btn-qty">2</button>
-                    <button onclick="setQty(3, this)" class="btn btn-outline-primary btn-qty">3</button>
-                    <button onclick="setQty(4, this)" class="btn btn-outline-primary btn-qty">4</button>
-                    <button onclick="setQty(5, this)" class="btn btn-outline-primary btn-qty">5</button>
-                    <button onclick="setQty(6, this)" class="btn btn-outline-primary btn-qty">6</button>
-                    <button onclick="setQty(7, this)" class="btn btn-outline-primary btn-qty">7</button>
-                    <button onclick="setQty(8, this)" class="btn btn-outline-primary btn-qty">8</button>
-                    <button onclick="setQty(9, this)" class="btn btn-outline-primary btn-qty">9</button>
+                    <script>
+                        for(let i=1; i<=9; i++) {
+                            document.write(`<button onclick="setQty(${i}, this)" class="btn btn-outline-primary btn-qty">${i}</button>`);
+                        }
+                    </script>
                 </div>
-                <div class="mb-3">
-                    <input type="number" id="manual-qty" class="form-control form-control-lg text-center bg-dark text-white border-secondary" placeholder="Cantidad">
-                </div>
+                <input type="number" id="manual-qty" class="form-control form-control-lg text-center bg-dark text-white border-secondary mb-3" placeholder="Cantidad">
             </div>
 
             <div class="mb-4 text-start">
-                <label class="small text-secondary mb-1">Observaciones / Incidencia:</label>
-                <textarea id="observation" class="form-control bg-dark text-white border-secondary" rows="2" placeholder="Opcional..."></textarea>
+                <label class="small text-secondary mb-1">Notas / Incidencias:</label>
+                <textarea id="observation" class="form-control bg-dark text-white border-secondary" rows="2"></textarea>
             </div>
 
-            <div id="action-buttons">
-                </div>
-            
+            <div id="action-buttons"></div>
             <button onclick="goBack()" class="btn btn-link text-secondary mt-3 w-100">Cancelar</button>
         </div>
     </div>
@@ -95,17 +82,15 @@
 
 <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
 <script>
-    // ⚠️ ATENCIÓN: PEGA TU URL DE GOOGLE APPS SCRIPT AQUÍ ABAJO ⚠️
+    // ⚠️ CAMBIA ESTO POR TU URL ⚠️
     const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxBKWW6jbhSBxGajkLiHKA88k-T8uO9XK13AfQqLxAi6giKydPuNzHPPVWXxyabFlI/exec";
     
     let html5QrCode = new Html5Qrcode("reader");
     let currentQR = "";
-    let selectedQty = 1;
 
     function showPanel(id) {
         document.querySelectorAll('.step-panel').forEach(p => p.classList.remove('step-active'));
         document.getElementById(id).classList.add('step-active');
-        window.scrollTo(0,0);
     }
 
     function goBack() {
@@ -113,66 +98,44 @@
         showPanel('panel-start');
     }
 
-    // ABRIR CÁMARA (Solo para Entradas)
     function openScanner() {
-        document.getElementById('scan-title').innerText = "Registrar Entrada";
         document.getElementById('reader').style.display = 'block';
         showPanel('panel-scan');
-
-        html5QrCode.start(
-            { facingMode: "environment" },
-            { fps: 10, qrbox: 250 },
-            (text) => {
-                currentQR = text.toUpperCase().trim();
-                html5QrCode.stop().then(() => {
-                    document.getElementById('reader').style.display = 'none';
-                    prepareConfirmation('entrada');
-                });
-            }
-        ).catch(err => alert("Error al abrir cámara: " + err));
+        html5QrCode.start({ facingMode: "environment" }, { fps: 10, qrbox: 250 }, (text) => {
+            currentQR = text.trim();
+            html5QrCode.stop().then(() => {
+                document.getElementById('reader').style.display = 'none';
+                prepareConfirmation('entrada');
+            });
+        }).catch(err => alert("Error: " + err));
     }
 
-    // GESTIONAR VIVIENDA DENTRO (Salida o Incidencia)
     function manageHousehold(id, qtyInside) {
-        currentQR = id.toUpperCase().trim();
-        selectedQty = qtyInside;
+        currentQR = id.trim();
         document.getElementById('manual-qty').value = qtyInside;
         prepareConfirmation('gestion');
     }
 
     function prepareConfirmation(mode) {
-        document.getElementById('scanned-id').innerText = "VIVIENDA: " + currentQR;
+        document.getElementById('scanned-id').innerText = currentQR;
         document.getElementById('observation').value = "";
         document.querySelectorAll('.btn-qty').forEach(b => b.classList.remove('active'));
         
         const actionButtons = document.getElementById('action-buttons');
-        const qtySection = document.getElementById('qty-section');
-        
         if (mode === 'entrada') {
-            document.getElementById('action-label').innerText = "Procesando ENTRADA";
-            qtySection.style.display = "block";
-            actionButtons.innerHTML = `
-                <button onclick="sendData('entrada', this)" class="btn btn-success w-100 py-3 font-weight-bold">
-                    ✅ CONFIRMAR ENTRADA
-                </button>
-            `;
+            document.getElementById('action-label').innerText = "REGISTRAR ENTRADA";
+            actionButtons.innerHTML = `<button onclick="sendData('entrada', this)" class="btn btn-success w-100 py-3 font-weight-bold">✅ CONFIRMAR ENTRADA</button>`;
         } else {
-            document.getElementById('action-label').innerText = "Gestionando VIVIENDA";
-            qtySection.style.display = "block";
+            document.getElementById('action-label').innerText = "GESTIONAR VIVIENDA";
             actionButtons.innerHTML = `
-                <button onclick="sendData('salida', this)" class="btn btn-danger w-100 py-3 mb-2 font-weight-bold">
-                    📤 REGISTRAR SALIDA
-                </button>
-                <button onclick="sendData('incidencia', this)" class="btn btn-warning w-100 py-3 font-weight-bold text-dark">
-                    📝 GUARDAR COMO INCIDENCIA (Sin salir)
-                </button>
+                <button onclick="sendData('salida', this)" class="btn btn-danger w-100 py-3 mb-2 font-weight-bold">📤 REGISTRAR SALIDA</button>
+                <button onclick="sendData('incidencia', this)" class="btn btn-warning w-100 py-3 font-weight-bold text-dark">📝 ANOTAR INCIDENCIA</button>
             `;
         }
         showPanel('panel-confirm');
     }
 
     function setQty(n, element) {
-        selectedQty = n;
         document.getElementById('manual-qty').value = n;
         document.querySelectorAll('.btn-qty').forEach(b => b.classList.remove('active'));
         if(element) element.classList.add('active');
@@ -181,17 +144,10 @@
     async function sendData(action, btn) {
         const qty = document.getElementById('manual-qty').value;
         const obs = document.getElementById('observation').value;
-        
-        if(action !== 'incidencia' && (!qty || qty <= 0)) {
-            return alert("Indica una cantidad válida");
-        }
-        if (action === 'incidencia' && obs.trim() === '') {
-            return alert("Debes escribir algo en 'Observaciones' para guardar una incidencia.");
-        }
+        if(action !== 'incidencia' && (!qty || qty <= 0)) return alert("Indica cantidad válida");
 
-        const originalText = btn.innerText;
-        btn.disabled = true;
-        btn.innerText = "Verificando...";
+        const txt = btn.innerText;
+        btn.disabled = true; btn.innerText = "Enviando...";
 
         try {
             const response = await fetch(WEB_APP_URL, {
@@ -200,59 +156,39 @@
                 body: JSON.stringify({ qrId: currentQR, action: action, quantity: qty, observation: obs })
             });
             const result = await response.json();
-            
             if (result.success) {
-                alert("✅ Registrado correctamente.");
                 updateStatus();
                 showPanel('panel-start');
-            } else {
-                alert(result.msg); 
-            }
-        } catch (e) {
-            alert("❌ Error de comunicación con la base de datos.");
-        } finally {
-            btn.disabled = false;
-            btn.innerText = originalText;
-        }
+            } else { alert(result.msg); }
+        } catch (e) { alert("Error de conexión"); }
+        btn.disabled = false; btn.innerText = txt;
     }
 
     async function confirmCierre() {
-        if (!confirm("¿Cerrar jornada? Se registrará la salida automática de todos.")) return;
-        try {
-            await fetch(WEB_APP_URL, { 
-                method: "POST", 
-                headers: { "Content-Type": "text/plain;charset=utf-8" },
-                body: JSON.stringify({ action: "cierre" }) 
-            });
-            alert("✅ Jornada cerrada con éxito.");
-            updateStatus();
-        } catch (e) { alert("Error al cerrar"); }
+        if (!confirm("¿Cerrar piscina? Se registrará la salida de todos.")) return;
+        await fetch(WEB_APP_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "cierre" }) });
+        updateStatus();
     }
 
     async function updateStatus() {
         try {
             const res = await fetch(WEB_APP_URL);
             const data = await res.json();
-            
-            const badge = document.getElementById('capacity-indicator');
-            badge.innerText = `${data.current} / ${data.max}`;
-            badge.style.color = data.current >= data.max ? '#ff4d4d' : '#00d1ff';
+            document.getElementById('capacity-indicator').innerText = `${data.current} / ${data.max}`;
+            document.getElementById('capacity-indicator').style.color = data.current >= data.max ? '#ff4d4d' : '#00d1ff';
             
             const list = document.getElementById('people-list');
             list.innerHTML = data.peopleInside.map(p => `
                 <div class="list-group-item d-flex justify-content-between align-items-center p-3 shadow-sm" onclick="manageHousehold('${p.id}', ${p.qty})">
-                    <div>
-                        <span class="d-block small text-secondary">Vivienda</span>
-                        <strong style="font-size:1.2rem">${p.id}</strong>
-                    </div>
-                    <span class="badge bg-primary badge-qty rounded-pill">${p.qty} Pers.</span>
+                    <div><span class="d-block small text-secondary">Vivienda</span><strong>${p.id}</strong></div>
+                    <span class="badge bg-primary badge-qty rounded-pill">${p.qty}</span>
                 </div>
-            `).join('') || '<div class="text-center text-muted py-4">Piscina vacía actualmente</div>';
+            `).join('') || '<div class="text-center text-muted py-4 small">No hay nadie en la piscina</div>';
         } catch(e) {}
     }
 
     updateStatus();
-    setInterval(updateStatus, 60000); // Refrescar cada minuto
+    setInterval(updateStatus, 60000);
 </script>
 </body>
 </html>
