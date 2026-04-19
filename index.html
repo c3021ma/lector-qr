@@ -4,191 +4,286 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Aforo Piscina 2026</title>
-    <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/241/241528.png">
-    <link rel="icon" type="image/png" href="https://cdn-icons-png.flaticon.com/512/241/241528.png">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
     <style>
-        body { background: #121212; color: #e0e0e0; font-family: -apple-system, sans-serif; }
-        .card-main { background: #1e1e1e; border-radius: 20px; border: 1px solid #333; }
-        #reader { width: 100%; border-radius: 15px; overflow: hidden; display: none; margin-bottom: 20px; background: #000; }
-        .capacity-box { font-size: 3.5rem; font-weight: 800; color: #00d1ff; }
-        .btn-qty { width: 60px; height: 60px; font-size: 1.5rem; border-radius: 12px; margin: 4px; font-weight: bold; }
-        .btn-qty.active { background-color: #ffc107 !important; color: #000 !important; border-color: #ffc107 !important; }
+        body { background: #0f0f0f; color: #f0f0f0; font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; }
+        .card-custom { background: #1a1a1a; border-radius: 15px; border: 1px solid #333; }
+        .capacity-number { font-size: 4rem; font-weight: 900; color: #00f2fe; line-height: 1; }
+        #reader { width: 100%; border-radius: 12px; overflow: hidden; display: none; background: #000; margin-bottom: 20px; }
+        .btn-qty { width: 55px; height: 55px; font-size: 1.4rem; border-radius: 10px; margin: 3px; font-weight: bold; border: 1px solid #444; background: #222; color: white; }
+        .btn-qty.active { background: #ffc107 !important; color: #000 !important; border-color: #ffc107 !important; }
         .step-panel { display: none; }
-        .step-active { display: block; }
-        .list-group-item { background: #2a2a2a; color: white; border: 1px solid #383838; margin-bottom: 8px; border-radius: 12px !important; cursor: pointer; }
-        .badge-qty { font-size: 1.1rem; padding: 10px 15px; }
+        .active-panel { display: block; }
+        .house-card { background: #252525; border: 1px solid #333; border-radius: 12px; cursor: pointer; transition: 0.2s; margin-bottom: 10px; }
+        .house-card:active { transform: scale(0.98); background: #333; }
+        .panic-bar { background: #ff3d00; color: white; border: none; font-weight: bold; border-radius: 8px; padding: 5px 15px; font-size: 0.8rem; }
+        .badge-role { font-size: 0.65rem; background: #444; color: #bbb; padding: 3px 8px; border-radius: 10px; text-transform: uppercase; margin-left: 5px; }
+        #status-msg { font-size: 0.8rem; color: #888; }
     </style>
 </head>
 <body>
 
-<div class="container py-4 text-center">
-    <div class="card-main p-3 mb-4 shadow-lg">
-        <h6 class="text-uppercase text-secondary small">Aforo Piscina Hoy</h6>
-        <div id="capacity-indicator" class="capacity-box">-- / --</div>
+<div class="container py-3">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <div>
+            <span class="small text-secondary">Bienvenido,</span>
+            <div id="user-info" class="fw-bold text-info">Cargando usuario...</div>
+        </div>
+        <button onclick="askPanic()" class="panic-bar shadow-sm">⚠️ PÁNICO</button>
     </div>
 
-    <div id="panel-start" class="step-panel step-active">
-        <button onclick="openScanner()" class="btn btn-success w-100 py-4 shadow mb-4" style="font-size: 1.4rem; border-radius: 15px;">
+    <div class="card-custom p-3 text-center mb-4 shadow">
+        <div id="capacity-indicator" class="capacity-number">-- / --</div>
+        <div class="text-secondary small text-uppercase mt-2" style="letter-spacing: 1px;">Ocupación Actual</div>
+    </div>
+
+    <div id="panel-start" class="step-panel active-panel">
+        <button onclick="openScanner()" class="btn btn-success w-100 py-4 mb-4 shadow" style="font-size: 1.3rem; border-radius: 15px; font-weight: bold;">
             📥 ESCANEAR ENTRADA
         </button>
-        
-        <div class="text-start">
-            <h6 class="text-secondary ps-2 text-uppercase small">Viviendas en el recinto:</h6>
-            <div id="people-list" class="list-group mt-2"></div>
+
+        <div id="admin-tools" style="display:none;" class="mb-4 text-center">
+            <div class="alert alert-info py-2 small" style="background: rgba(13, 202, 240, 0.1); border: 1px solid #0dcaf0;">
+                📊 <strong>Perfil Junta:</strong> Revisa la pestaña <i>Dashboard</i> en el Excel para informes detallados.
+            </div>
         </div>
 
-        <div class="mt-5 pt-4 border-top border-secondary">
-            <button onclick="confirmCierre()" class="btn btn-outline-warning w-100 py-3">
-                🌙 FINALIZAR JORNADA (Reset)
-            </button>
+        <h6 class="text-secondary small text-uppercase mb-3" style="font-size: 0.7rem; font-weight: bold;">Viviendas en el recinto:</h6>
+        <div id="people-list">
+            </div>
+
+        <div class="mt-5 pt-3 border-top border-secondary opacity-50">
+            <button onclick="askCierre()" class="btn btn-outline-secondary w-100 py-2 btn-sm">🌙 Cerrar Jornada (Reset total)</button>
         </div>
     </div>
 
-    <div id="panel-scan" class="step-panel">
-        <h4 id="scan-title" class="mb-3 text-success">Escaneando código...</h4>
-        <div id="reader"></div>
-        <button onclick="goBack()" class="btn btn-outline-light w-100 py-3">Volver Atrás</button>
+    <div id="panel-scan" class="step-panel text-center">
+        <h4 class="text-success mb-3">Enfoque el código QR</h4>
+        <div id="reader" class="mb-3 shadow"></div>
+        <button onclick="stopScannerAndReturn()" class="btn btn-outline-light w-100 py-3">Cancelar y Volver</button>
     </div>
 
-    <div id="panel-confirm" class="step-panel">
-        <div class="card-main p-4 shadow">
-            <h4 class="text-info mb-1" id="scanned-id">---</h4>
-            <p id="action-label" class="text-secondary text-uppercase small"></p>
+    <div id="panel-action" class="step-panel">
+        <div class="card-custom p-4 shadow">
+            <h3 id="display-qr" class="text-info mb-1">---</h3>
+            <p id="display-mode" class="small text-secondary mb-3 text-uppercase fw-bold"></p>
             <hr class="border-secondary">
             
-            <div id="qty-section">
-                <p class="mb-2">¿Cuántas personas?</p>
-                <div class="d-flex flex-wrap justify-content-center mb-3">
-                    <script>
-                        for(let i=1; i<=9; i++) {
-                            document.write(`<button onclick="setQty(${i}, this)" class="btn btn-outline-primary btn-qty">${i}</button>`);
-                        }
-                    </script>
+            <div id="qty-box" class="mb-4 text-center">
+                <p class="small mb-2">¿Cuántas personas?</p>
+                <div class="d-flex flex-wrap justify-content-center" id="qty-btns">
+                    </div>
+                <input type="number" id="manual-qty" class="form-control form-control-lg bg-dark text-white border-secondary text-center mt-3" placeholder="0">
+            </div>
+
+            <div class="mb-4">
+                <label class="small text-secondary mb-1">Notas o Incidencias (opcional):</label>
+                <textarea id="obs" class="form-control bg-dark text-white border-secondary" rows="2" placeholder="Ej: Invitados, comportamiento..."></textarea>
+            </div>
+
+            <div id="footer-btns">
                 </div>
-                <input type="number" id="manual-qty" class="form-control form-control-lg text-center bg-dark text-white border-secondary mb-3" placeholder="Cantidad">
-            </div>
-
-            <div class="mb-4 text-start">
-                <label class="small text-secondary mb-1">Notas / Incidencias:</label>
-                <textarea id="observation" class="form-control bg-dark text-white border-secondary" rows="2"></textarea>
-            </div>
-
-            <div id="action-buttons"></div>
-            <button onclick="goBack()" class="btn btn-link text-secondary mt-3 w-100">Cancelar</button>
+            <button onclick="showPanel('panel-start')" class="btn btn-link text-secondary w-100 mt-3">Cancelar</button>
         </div>
     </div>
 </div>
 
-<script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+<script src="https://unpkg.com/html5-qrcode"></script>
+
 <script>
-    // ⚠️ CAMBIA ESTO POR TU URL ⚠️
-    const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxBKWW6jbhSBxGajkLiHKA88k-T8uO9XK13AfQqLxAi6giKydPuNzHPPVWXxyabFlI/exec";
+    // ---------------------------------------------------------
+    // CONFIGURACIÓN
+    // ---------------------------------------------------------
     
-    let html5QrCode = new Html5Qrcode("reader");
-    let currentQR = "";
+    // PEGA AQUÍ TU URL DE GOOGLE APPS SCRIPT (la que termina en /exec)
+    const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwL2_rrG1y4UOaKaKXKSrNRQ82qmTKSt2zQfECI0RU5yc0ZOWWuU1vDd9I9LcgKj28/exec"; 
+
+    // Datos inyectados por el servidor al cargar
+    const DATA = JSON.parse('<?!= appData ?>');
+    
+    let scanner = new Html5Qrcode("reader");
+    let tempQR = "";
+    let selectedMode = "";
+
+    // ---------------------------------------------------------
+    // INICIALIZACIÓN
+    // ---------------------------------------------------------
+
+    function init() {
+        // Mostrar info del usuario y su rol
+        document.getElementById('user-info').innerHTML = `${DATA.userName} <span class="badge-role">${DATA.role}</span>`;
+        
+        // Mostrar herramientas de administrador si corresponde
+        if(DATA.role === "Junta Directiva") {
+            document.getElementById('admin-tools').style.display = 'block';
+        }
+        
+        // Crear botones de cantidad rápidamente
+        const container = document.getElementById('qty-btns');
+        for(let i=1; i<=6; i++) {
+            container.innerHTML += `<button onclick="setQ(${i}, this)" class="btn btn-qty">${i}</button>`;
+        }
+        
+        updateUI();
+    }
+
+    // ---------------------------------------------------------
+    // NAVEGACIÓN Y UI
+    // ---------------------------------------------------------
 
     function showPanel(id) {
-        document.querySelectorAll('.step-panel').forEach(p => p.classList.remove('step-active'));
-        document.getElementById(id).classList.add('step-active');
+        document.querySelectorAll('.step-panel').forEach(p => p.classList.remove('active-panel'));
+        document.getElementById(id).classList.add('active-panel');
     }
 
-    function goBack() {
-        if(html5QrCode.isScanning) html5QrCode.stop();
-        showPanel('panel-start');
-    }
-
-    function openScanner() {
-        document.getElementById('reader').style.display = 'block';
-        showPanel('panel-scan');
-        html5QrCode.start({ facingMode: "environment" }, { fps: 10, qrbox: 250 }, (text) => {
-            currentQR = text.trim();
-            html5QrCode.stop().then(() => {
-                document.getElementById('reader').style.display = 'none';
-                prepareConfirmation('entrada');
-            });
-        }).catch(err => alert("Error: " + err));
-    }
-
-    function manageHousehold(id, qtyInside) {
-        currentQR = id.trim();
-        document.getElementById('manual-qty').value = qtyInside;
-        prepareConfirmation('gestion');
-    }
-
-    function prepareConfirmation(mode) {
-        document.getElementById('scanned-id').innerText = currentQR;
-        document.getElementById('observation').value = "";
-        document.querySelectorAll('.btn-qty').forEach(b => b.classList.remove('active'));
-        
-        const actionButtons = document.getElementById('action-buttons');
-        if (mode === 'entrada') {
-            document.getElementById('action-label').innerText = "REGISTRAR ENTRADA";
-            actionButtons.innerHTML = `<button onclick="sendData('entrada', this)" class="btn btn-success w-100 py-3 font-weight-bold">✅ CONFIRMAR ENTRADA</button>`;
-        } else {
-            document.getElementById('action-label').innerText = "GESTIONAR VIVIENDA";
-            actionButtons.innerHTML = `
-                <button onclick="sendData('salida', this)" class="btn btn-danger w-100 py-3 mb-2 font-weight-bold">📤 REGISTRAR SALIDA</button>
-                <button onclick="sendData('incidencia', this)" class="btn btn-warning w-100 py-3 font-weight-bold text-dark">📝 ANOTAR INCIDENCIA</button>
-            `;
-        }
-        showPanel('panel-confirm');
-    }
-
-    function setQty(n, element) {
+    function setQ(n, btn) {
         document.getElementById('manual-qty').value = n;
         document.querySelectorAll('.btn-qty').forEach(b => b.classList.remove('active'));
-        if(element) element.classList.add('active');
+        if(btn) btn.classList.add('active');
     }
 
-    async function sendData(action, btn) {
-        const qty = document.getElementById('manual-qty').value;
-        const obs = document.getElementById('observation').value;
-        if(action !== 'incidencia' && (!qty || qty <= 0)) return alert("Indica cantidad válida");
+    function updateUI() {
+        // Actualizar contador central
+        const ind = document.getElementById('capacity-indicator');
+        ind.innerText = `${DATA.current} / ${DATA.max}`;
+        if(DATA.current >= DATA.max) {
+            ind.style.color = "#ff4b2b"; // Rojo si está lleno
+        }
 
-        const txt = btn.innerText;
-        btn.disabled = true; btn.innerText = "Enviando...";
-
-        try {
-            const response = await fetch(WEB_APP_URL, {
-                method: "POST",
-                headers: { "Content-Type": "text/plain;charset=utf-8" },
-                body: JSON.stringify({ qrId: currentQR, action: action, quantity: qty, observation: obs })
-            });
-            const result = await response.json();
-            if (result.success) {
-                updateStatus();
-                showPanel('panel-start');
-            } else { alert(result.msg); }
-        } catch (e) { alert("Error de conexión"); }
-        btn.disabled = false; btn.innerText = txt;
-    }
-
-    async function confirmCierre() {
-        if (!confirm("¿Cerrar piscina? Se registrará la salida de todos.")) return;
-        await fetch(WEB_APP_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "cierre" }) });
-        updateStatus();
-    }
-
-    async function updateStatus() {
-        try {
-            const res = await fetch(WEB_APP_URL);
-            const data = await res.json();
-            document.getElementById('capacity-indicator').innerText = `${data.current} / ${data.max}`;
-            document.getElementById('capacity-indicator').style.color = data.current >= data.max ? '#ff4d4d' : '#00d1ff';
-            
-            const list = document.getElementById('people-list');
-            list.innerHTML = data.peopleInside.map(p => `
-                <div class="list-group-item d-flex justify-content-between align-items-center p-3 shadow-sm" onclick="manageHousehold('${p.id}', ${p.qty})">
-                    <div><span class="d-block small text-secondary">Vivienda</span><strong>${p.id}</strong></div>
-                    <span class="badge bg-primary badge-qty rounded-pill">${p.qty}</span>
+        // Actualizar lista de viviendas dentro
+        const list = document.getElementById('people-list');
+        if (DATA.peopleInside.length === 0) {
+            list.innerHTML = '<p class="text-center text-muted py-4 small">No hay nadie registrado en la piscina ahora mismo.</p>';
+        } else {
+            list.innerHTML = DATA.peopleInside.map(p => `
+                <div class="house-card p-3 d-flex justify-content-between align-items-center" onclick="prepareAction('${p.id}', 'gestion')">
+                    <div>
+                        <span class="small text-secondary d-block" style="font-size:0.6rem; text-transform:uppercase;">Vivienda</span>
+                        <strong style="font-size:1.1rem;">${p.id}</strong>
+                    </div>
+                    <div class="text-end">
+                        <span class="badge bg-primary px-3 py-2" style="border-radius:8px;">${p.qty} pers.</span>
+                    </div>
                 </div>
-            `).join('') || '<div class="text-center text-muted py-4 small">No hay nadie en la piscina</div>';
-        } catch(e) {}
+            `).join('');
+        }
     }
 
-    updateStatus();
-    setInterval(updateStatus, 60000);
+    // ---------------------------------------------------------
+    // LÓGICA DEL ESCÁNER
+    // ---------------------------------------------------------
+
+    function openScanner() {
+        showPanel('panel-scan');
+        document.getElementById('reader').style.display = 'block';
+        
+        const config = { fps: 10, qrbox: { width: 250, height: 250 } };
+        
+        scanner.start({ facingMode: "environment" }, config, (text) => {
+            tempQR = text.toUpperCase().trim();
+            scanner.stop().then(() => {
+                document.getElementById('reader').style.display = 'none';
+                prepareAction(tempQR, 'entrada');
+            });
+        }).catch(e => {
+            alert("Error al abrir cámara. Asegúrate de dar permisos.");
+            showPanel('panel-start');
+        });
+    }
+
+    function stopScannerAndReturn() {
+        scanner.stop().then(() => {
+            document.getElementById('reader').style.display = 'none';
+            showPanel('panel-start');
+        }).catch(() => showPanel('panel-start'));
+    }
+
+    // ---------------------------------------------------------
+    // ACCIONES (ENTRADA / SALIDA)
+    // ---------------------------------------------------------
+
+    function prepareAction(qr, mode) {
+        tempQR = qr;
+        selectedMode = mode;
+        document.getElementById('display-qr').innerText = qr;
+        document.getElementById('obs').value = "";
+        document.getElementById('manual-qty').value = "";
+        document.querySelectorAll('.btn-qty').forEach(b => b.classList.remove('active'));
+        
+        const footer = document.getElementById('footer-btns');
+        
+        if(mode === 'entrada') {
+            document.getElementById('display-mode').innerText = "📥 Registro de Entrada";
+            footer.innerHTML = `<button onclick="submitAction('entrada')" class="btn btn-success w-100 py-3 fw-bold shadow">CONFIRMAR ENTRADA</button>`;
+        } else {
+            document.getElementById('display-mode').innerText = "⚙️ Gestión de Vivienda";
+            footer.innerHTML = `
+                <button onclick="submitAction('salida')" class="btn btn-danger w-100 py-3 mb-2 fw-bold shadow">REGISTRAR SALIDA</button>
+                <button onclick="submitAction('incidencia')" class="btn btn-warning w-100 py-3 fw-bold text-dark shadow">SOLO ANOTAR INCIDENCIA</button>
+            `;
+        }
+        showPanel('panel-action');
+    }
+
+    async function submitAction(actionType) {
+        const qty = document.getElementById('manual-qty').value;
+        const observation = document.getElementById('obs').value;
+        
+        if(actionType !== 'incidencia' && (!qty || qty <= 0)) {
+            return alert("Por favor, introduce una cantidad válida.");
+        }
+
+        const btn = event.target;
+        const originalText = btn.innerText;
+        btn.disabled = true;
+        btn.innerText = "Enviando datos...";
+
+        // Llamada al servidor (Google Apps Script)
+        google.script.run
+            .withSuccessHandler((res) => {
+                if(res.success) {
+                    location.reload(); // Recargamos para refrescar todos los datos del servidor
+                } else {
+                    alert("⚠️ ERROR: " + res.msg);
+                    btn.disabled = false;
+                    btn.innerText = originalText;
+                }
+            })
+            .withFailureHandler((err) => {
+                alert("Error crítico de conexión.");
+                btn.disabled = false;
+                btn.innerText = originalText;
+            })
+            .doPost(JSON.stringify({
+                qrId: tempQR,
+                action: actionType,
+                quantity: qty,
+                observation: observation
+            }));
+    }
+
+    // ---------------------------------------------------------
+    // FUNCIONES AUXILIARES (PÁNICO Y CIERRE)
+    // ---------------------------------------------------------
+
+    function askPanic() {
+        const msg = prompt("⚠️ AVISO DE EMERGENCIA:\nDescribe brevemente el problema. Se enviará un email inmediato a la Junta Directiva.");
+        if(!msg) return;
+        
+        google.script.run.withSuccessHandler(r => alert(r.msg))
+            .doPost(JSON.stringify({action: 'panic', observation: msg}));
+    }
+
+    function askCierre() {
+        if(confirm("¿Estás seguro de que quieres finalizar la jornada?\nEsto registrará la salida de todas las personas que están actualmente en la piscina.")) {
+            google.script.run.withSuccessHandler(() => location.reload())
+                .doPost(JSON.stringify({action: 'cierre'}));
+        }
+    }
+
+    // Iniciar la App
+    init();
+
 </script>
 </body>
 </html>
