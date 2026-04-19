@@ -1,62 +1,253 @@
-<div class="d-flex flex-wrap justify-content-center my-3">
-    <button onclick="setQty(1)" class="btn btn-primary btn-qty">1</button>
-    <button onclick="setQty(2)" class="btn btn-primary btn-qty">2</button>
-    <button onclick="setQty(3)" class="btn btn-primary btn-qty">3</button>
-    <button onclick="setQty(4)" class="btn btn-primary btn-qty">4</button>
-    <button onclick="setQty(5)" class="btn btn-primary btn-qty">5</button>
-    <button onclick="setQty(6)" class="btn btn-primary btn-qty">6</button>
-    <button onclick="setQty(7)" class="btn btn-primary btn-qty">7</button>
-    <button onclick="setQty(8)" class="btn btn-primary btn-qty">8</button>
-    <button onclick="setQty(9)" class="btn btn-primary btn-qty">9</button>
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Aforo Piscina 2026</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <style>
+        body { background: #121212; color: #e0e0e0; font-family: -apple-system, sans-serif; }
+        .card-main { background: #1e1e1e; border-radius: 20px; border: 1px solid #333; }
+        #reader { width: 100%; border-radius: 15px; overflow: hidden; display: none; margin-bottom: 20px; background: #000; }
+        .capacity-box { font-size: 3.5rem; font-weight: 800; color: #00d1ff; }
+        .btn-qty { width: 65px; height: 65px; font-size: 1.6rem; border-radius: 12px; margin: 5px; font-weight: bold; }
+        .btn-qty.active { background-color: #ffc107 !important; color: #000 !important; border-color: #ffc107 !important; }
+        .step-panel { display: none; }
+        .step-active { display: block; }
+        .list-group-item { background: #2a2a2a; color: white; border: 1px solid #383838; margin-bottom: 5px; border-radius: 10px !important; }
+        .badge-qty { font-size: 1.1rem; padding: 10px 15px; }
+    </style>
+</head>
+<body>
+
+<div class="container py-4 text-center">
+    <div class="card-main p-3 mb-4 shadow-lg">
+        <h6 class="text-uppercase text-secondary">Aforo Total Hoy</h6>
+        <div id="capacity-indicator" class="capacity-box">-- / --</div>
+    </div>
+
+    <div id="panel-start" class="step-panel step-active">
+        <div class="row g-3">
+            <div class="col-6">
+                <button onclick="openScanner('entrada')" class="btn btn-success w-100 py-4 shadow">
+                    <h2 class="mb-0">📥</h2><b>ENTRADA</b>
+                </button>
+            </div>
+            <div class="col-6">
+                <button onclick="openScanner('salida')" class="btn btn-danger w-100 py-4 shadow">
+                    <h2 class="mb-0">📤</h2><b>SALIDA</b>
+                </button>
+            </div>
+        </div>
+        
+        <div class="mt-5 text-start">
+            <h6 class="text-secondary ps-2">VIVIENDAS EN EL RECINTO:</h6>
+            <div id="people-list" class="list-group">
+                </div>
+        </div>
+
+        <div class="mt-5 pt-4 border-top border-secondary">
+            <button onclick="confirmCierre()" class="btn btn-outline-warning w-100 py-3">
+                🌙 FINALIZAR JORNADA (Cierre)
+            </button>
+        </div>
+    </div>
+
+    <div id="panel-scan" class="step-panel">
+        <h4 id="scan-title" class="mb-3">Escaneando...</h4>
+        <div id="reader"></div>
+        <button onclick="goBack()" class="btn btn-outline-light w-100 py-3">Cancelar y Volver</button>
+    </div>
+
+    <div id="panel-confirm" class="step-panel">
+        <div class="card-main p-4 shadow">
+            <h4 class="text-info mb-1" id="scanned-id">---</h4>
+            <p id="action-label" class="text-secondary text-uppercase small font-weight-bold"></p>
+            
+            <hr class="border-secondary">
+            
+            <p class="mb-2">¿Cuántas personas?</p>
+            <div class="d-flex flex-wrap justify-content-center mb-3">
+                <button onclick="setQty(1, this)" class="btn btn-outline-primary btn-qty">1</button>
+                <button onclick="setQty(2, this)" class="btn btn-outline-primary btn-qty">2</button>
+                <button onclick="setQty(3, this)" class="btn btn-outline-primary btn-qty">3</button>
+                <button onclick="setQty(4, this)" class="btn btn-outline-primary btn-qty">4</button>
+                <button onclick="setQty(5, this)" class="btn btn-outline-primary btn-qty">5</button>
+                <button onclick="setQty(6, this)" class="btn btn-outline-primary btn-qty">6</button>
+                <button onclick="setQty(7, this)" class="btn btn-outline-primary btn-qty">7</button>
+                <button onclick="setQty(8, this)" class="btn btn-outline-primary btn-qty">8</button>
+                <button onclick="setQty(9, this)" class="btn btn-outline-primary btn-qty">9</button>
+            </div>
+
+            <div class="mb-3">
+                <input type="number" id="manual-qty" class="form-control form-control-lg text-center bg-dark text-white border-secondary" placeholder="Cantidad manual">
+            </div>
+
+            <div class="mb-4 text-start">
+                <label class="small text-secondary mb-1">Observaciones:</label>
+                <textarea id="observation" class="form-control bg-dark text-white border-secondary" rows="2" placeholder="Ej: Traen flotador gigante..."></textarea>
+            </div>
+
+            <button id="btn-finalizar" onclick="sendData()" class="btn btn-primary w-100 py-3 font-weight-bold">CONFIRMAR Y GUARDAR</button>
+            <button onclick="goBack()" class="btn btn-link text-secondary mt-3">Cancelar</button>
+        </div>
+    </div>
 </div>
 
-<div class="mt-3">
-    <label class="small text-secondary">Observaciones (opcional):</label>
-    <textarea id="observation" class="form-control bg-dark text-white border-secondary" rows="2"></textarea>
-</div>
-
-<div class="mt-5 border-top pt-3">
-    <button onclick="confirmCierre()" class="btn btn-outline-warning w-100 py-3">
-        🌙 FINALIZAR JORNADA (Cierre)
-    </button>
-</div>
-
+<script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
 <script>
-    // ... (Variables globales de antes) ...
+    // URL DE TU IMPLEMENTACIÓN DE GOOGLE APPS SCRIPT
+    const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxBKWW6jbhSBxGajkLiHKA88k-T8uO9XK13AfQqLxAi6giKydPuNzHPPVWXxyabFlI/exec";
+    
+    let html5QrCode = new Html5Qrcode("reader");
+    let currentMode = ""; // 'entrada' o 'salida'
+    let currentQR = "";
+    let selectedQty = 1;
     let peopleInsideData = [];
 
-    async function updateStatus() {
-        // ... (Fetch normal) ...
-        const data = await res.json();
-        peopleInsideData = data.peopleInside; // Guardamos para consultar límites localmente
-        // ... (Renderizado de lista) ...
+    // Cambiar de pantalla
+    function showPanel(id) {
+        document.querySelectorAll('.step-panel').forEach(p => p.classList.remove('step-active'));
+        document.getElementById(id).classList.add('step-active');
+        window.scrollTo(0,0);
     }
 
-    // Lógica para Salida: Limitar y Sugerir cantidad
-    function quickExit(id) {
+    function goBack() {
+        if(html5QrCode.isScanning) html5QrCode.stop();
+        showPanel('panel-start');
+    }
+
+    // Lógica Cámara
+    function openScanner(mode) {
+        currentMode = mode;
+        document.getElementById('scan-title').innerText = mode === 'entrada' ? "Registrar Entrada" : "Registrar Salida";
+        document.getElementById('reader').style.display = 'block';
+        document.getElementById('observation').value = ""; 
+        showPanel('panel-scan');
+
+        html5QrCode.start(
+            { facingMode: "environment" },
+            { fps: 10, qrbox: 250 },
+            (text) => {
+                currentQR = text;
+                html5QrCode.stop().then(() => {
+                    document.getElementById('reader').style.display = 'none';
+                    prepareConfirmation();
+                });
+            }
+        ).catch(err => alert("Error al abrir cámara: " + err));
+    }
+
+    // Al tocar una vivienda de la lista (Salida rápida)
+    function quickExit(id, qtyInside) {
         currentQR = id;
         currentMode = 'salida';
-        const info = peopleInsideData.find(p => p.id === id);
-        const insideQty = info ? info.qty : 1;
+        document.getElementById('observation').value = "";
         
-        selectedQty = insideQty;
-        document.getElementById('manual-qty').value = insideQty;
-        document.getElementById('manual-qty').max = insideQty; // Limitamos el input
+        // Sugerir la cantidad que hay dentro
+        selectedQty = qtyInside;
+        document.getElementById('manual-qty').value = qtyInside;
         
-        document.getElementById('observation').value = ""; // Limpiar obs
-        showStep3();
+        prepareConfirmation();
     }
 
-    async function confirmCierre() {
-        if (!confirm("¿Cerrar jornada? Se registrará la salida de todos los vecinos actuales indicando que se quedan al cierre.")) return;
+    function prepareConfirmation() {
+        document.getElementById('scanned-id').innerText = "VIVIENDA: " + currentQR;
+        document.getElementById('action-label').innerText = currentMode === 'entrada' ? "Procesando Entrada" : "Procesando Salida";
         
-        try {
-            await fetch(WEB_APP_URL, {
-                method: "POST",
-                body: JSON.stringify({ action: "cierre" })
-            });
-            alert("Jornada cerrada correctamente.");
-            updateStatus();
-        } catch (e) { alert("Error al cerrar"); }
+        // Resetear botones de cantidad
+        document.querySelectorAll('.btn-qty').forEach(b => b.classList.remove('active'));
+        showPanel('panel-confirm');
     }
+
+    function setQty(n, element) {
+        selectedQty = n;
+        document.getElementById('manual-qty').value = n;
+        document.querySelectorAll('.btn-qty').forEach(b => b.classList.remove('active'));
+        if(element) element.classList.add('active');
+    }
+
+    // Enviar datos a Google Sheets
+    async function sendData() {
+        const qty = document.getElementById('manual-qty').value;
+        const obs = document.getElementById('observation').value;
+        const btn = document.getElementById('btn-finalizar');
+        
+        if(!qty || qty <= 0) return alert("Indica una cantidad válida");
+
+        btn.disabled = true;
+        btn.innerText = "Guardando en la nube...";
+
+        try {
+            const response = await fetch(WEB_APP_URL, {
+                method: "POST",
+                mode: "no-cors", // Para evitar problemas de seguridad del navegador
+                body: JSON.stringify({ 
+                    qrId: currentQR, 
+                    action: currentMode, 
+                    quantity: qty, 
+                    observation: obs 
+                })
+            });
+            
+            // Como usamos no-cors no podemos leer la respuesta, pero si no da error asumimos éxito
+            alert("Registro guardado.");
+            setTimeout(updateStatus, 1500); // Actualizar aforo tras un segundo
+            showPanel('panel-start');
+        } catch (e) {
+            alert("Error de conexión con Google Sheets.");
+        } finally {
+            btn.disabled = false;
+            btn.innerText = "CONFIRMAR Y GUARDAR";
+        }
+    }
+
+    // Cierre de Jornada
+    async function confirmCierre() {
+        if (!confirm("¿Cerrar jornada? Se registrará la salida automática de todos.")) return;
+        try {
+            await fetch(WEB_APP_URL, { 
+                method: "POST", 
+                mode: "no-cors", 
+                body: JSON.stringify({ action: "cierre" }) 
+            });
+            alert("Piscina vaciada. Se han registrado las salidas.");
+            setTimeout(updateStatus, 1000);
+        } catch (e) { alert("Error"); }
+    }
+
+    // Pedir datos de aforo actual
+    async function updateStatus() {
+        try {
+            const res = await fetch(WEB_APP_URL);
+            const data = await res.json();
+            
+            // Contador Aforo
+            const badge = document.getElementById('capacity-indicator');
+            badge.innerText = `${data.current} / ${data.max}`;
+            badge.style.color = data.current >= data.max ? '#ff4d4d' : '#00d1ff';
+            
+            // Lista de viviendas dentro
+            const list = document.getElementById('people-list');
+            list.innerHTML = data.peopleInside.map(p => `
+                <div class="list-group-item d-flex justify-content-between align-items-center p-3 shadow-sm" onclick="quickExit('${p.id}', ${p.qty})">
+                    <div>
+                        <span class="d-block small text-secondary">Vivienda</span>
+                        <strong style="font-size:1.2rem">${p.id}</strong>
+                    </div>
+                    <span class="badge bg-primary badge-qty rounded-pill">${p.qty} Pers.</span>
+                </div>
+            `).join('') || '<div class="text-center text-muted py-4">Piscina vacía actualmente</div>';
+            
+        } catch(e) {
+            console.error("Error al actualizar aforo");
+        }
+    }
+
+    // Cargar datos al iniciar
+    updateStatus();
+    // Refrescar cada 2 minutos por si otro socorrista usa otra tablet
+    setInterval(updateStatus, 120000);
 </script>
+</body>
+</html>
