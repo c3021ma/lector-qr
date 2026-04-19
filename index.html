@@ -4,6 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Aforo Piscina 2026</title>
+    
+    <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/241/241528.png">
+    <link rel="icon" type="image/png" href="https://cdn-icons-png.flaticon.com/512/241/241528.png">
+    
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
     <style>
         body { background: #121212; color: #e0e0e0; font-family: -apple-system, sans-serif; }
@@ -96,7 +100,7 @@
 
 <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
 <script>
-    // URL DE TU IMPLEMENTACIÓN DE GOOGLE APPS SCRIPT
+    // ⚠️ ATENCIÓN: PEGA TU URL DE GOOGLE APPS SCRIPT AQUÍ ABAJO ⚠️
     const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxBKWW6jbhSBxGajkLiHKA88k-T8uO9XK13AfQqLxAi6giKydPuNzHPPVWXxyabFlI/exec";
     
     let html5QrCode = new Html5Qrcode("reader");
@@ -105,7 +109,6 @@
     let selectedQty = 1;
     let peopleInsideData = [];
 
-    // Cambiar de pantalla
     function showPanel(id) {
         document.querySelectorAll('.step-panel').forEach(p => p.classList.remove('step-active'));
         document.getElementById(id).classList.add('step-active');
@@ -117,7 +120,6 @@
         showPanel('panel-start');
     }
 
-    // Lógica Cámara
     function openScanner(mode) {
         currentMode = mode;
         document.getElementById('scan-title').innerText = mode === 'entrada' ? "Registrar Entrada" : "Registrar Salida";
@@ -138,24 +140,18 @@
         ).catch(err => alert("Error al abrir cámara: " + err));
     }
 
-    // Al tocar una vivienda de la lista (Salida rápida)
     function quickExit(id, qtyInside) {
         currentQR = id;
         currentMode = 'salida';
         document.getElementById('observation').value = "";
-        
-        // Sugerir la cantidad que hay dentro
         selectedQty = qtyInside;
         document.getElementById('manual-qty').value = qtyInside;
-        
         prepareConfirmation();
     }
 
     function prepareConfirmation() {
         document.getElementById('scanned-id').innerText = "VIVIENDA: " + currentQR;
         document.getElementById('action-label').innerText = currentMode === 'entrada' ? "Procesando Entrada" : "Procesando Salida";
-        
-        // Resetear botones de cantidad
         document.querySelectorAll('.btn-qty').forEach(b => b.classList.remove('active'));
         showPanel('panel-confirm');
     }
@@ -167,21 +163,24 @@
         if(element) element.classList.add('active');
     }
 
-    // Enviar datos a Google Sheets
     async function sendData() {
         const qty = document.getElementById('manual-qty').value;
         const obs = document.getElementById('observation').value;
         const btn = document.getElementById('btn-finalizar');
         
-        if(!qty || qty <= 0) return alert("Indica una cantidad válida");
+        if(!qty || qty <= 0) {
+            alert("Indica una cantidad válida mayor a 0");
+            return;
+        }
 
         btn.disabled = true;
-        btn.innerText = "Guardando en la nube...";
+        btn.innerText = "Verificando datos...";
 
         try {
+            // Quitamos el modo "no-cors" para poder leer los errores del servidor
             const response = await fetch(WEB_APP_URL, {
                 method: "POST",
-                mode: "no-cors", // Para evitar problemas de seguridad del navegador
+                headers: { "Content-Type": "text/plain;charset=utf-8" },
                 body: JSON.stringify({ 
                     qrId: currentQR, 
                     action: currentMode, 
@@ -190,44 +189,46 @@
                 })
             });
             
-            // Como usamos no-cors no podemos leer la respuesta, pero si no da error asumimos éxito
-            alert("Registro guardado.");
-            setTimeout(updateStatus, 1500); // Actualizar aforo tras un segundo
-            showPanel('panel-start');
+            const result = await response.json();
+            
+            if (result.success) {
+                alert("✅ Registro guardado correctamente.");
+                updateStatus();
+                showPanel('panel-start');
+            } else {
+                // AQUÍ ES DONDE SE MUESTRAN LOS AVISOS DE LÍMITE EXCEDIDO O SALIDA NEGATIVA
+                alert(result.msg); 
+            }
         } catch (e) {
-            alert("Error de conexión con Google Sheets.");
+            alert("❌ Error de comunicación. Comprueba tu conexión a internet.");
         } finally {
             btn.disabled = false;
             btn.innerText = "CONFIRMAR Y GUARDAR";
         }
     }
 
-    // Cierre de Jornada
     async function confirmCierre() {
-        if (!confirm("¿Cerrar jornada? Se registrará la salida automática de todos.")) return;
+        if (!confirm("¿Cerrar jornada? Se registrará la salida de todos los vecinos que queden en la lista.")) return;
         try {
             await fetch(WEB_APP_URL, { 
                 method: "POST", 
-                mode: "no-cors", 
+                headers: { "Content-Type": "text/plain;charset=utf-8" },
                 body: JSON.stringify({ action: "cierre" }) 
             });
-            alert("Piscina vaciada. Se han registrado las salidas.");
-            setTimeout(updateStatus, 1000);
-        } catch (e) { alert("Error"); }
+            alert("✅ Jornada cerrada con éxito.");
+            updateStatus();
+        } catch (e) { alert("Error al cerrar jornada"); }
     }
 
-    // Pedir datos de aforo actual
     async function updateStatus() {
         try {
             const res = await fetch(WEB_APP_URL);
             const data = await res.json();
             
-            // Contador Aforo
             const badge = document.getElementById('capacity-indicator');
             badge.innerText = `${data.current} / ${data.max}`;
             badge.style.color = data.current >= data.max ? '#ff4d4d' : '#00d1ff';
             
-            // Lista de viviendas dentro
             const list = document.getElementById('people-list');
             list.innerHTML = data.peopleInside.map(p => `
                 <div class="list-group-item d-flex justify-content-between align-items-center p-3 shadow-sm" onclick="quickExit('${p.id}', ${p.qty})">
@@ -240,13 +241,11 @@
             `).join('') || '<div class="text-center text-muted py-4">Piscina vacía actualmente</div>';
             
         } catch(e) {
-            console.error("Error al actualizar aforo");
+            console.log("Esperando conexión...");
         }
     }
 
-    // Cargar datos al iniciar
     updateStatus();
-    // Refrescar cada 2 minutos por si otro socorrista usa otra tablet
     setInterval(updateStatus, 120000);
 </script>
 </body>
