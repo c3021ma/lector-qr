@@ -61,6 +61,39 @@
             <div id="admin-tools" style="display:none;" class="mb-4 text-center">
                 <div class="alert py-2 small" style="background: rgba(13, 202, 240, 0.1); border: 1px solid #0dcaf0; color: #0dcaf0;">
                     📊 Perfil Junta: Revisa la pestaña Dashboard en tu Google Sheet.
+                    <div id="stats-container" class="mt-4" style="display:none;">
+    <h5 class="text-secondary small text-uppercase mb-3 text-center">Panel de Estadísticas Tiempo Real</h5>
+    <div class="looker-wrapper">
+        <iframe 
+            src="https://datastudio.google.com/embed/reporting/75fe238b-9370-4ad1-ac63-71b889a5699a/page/y2pvF" 
+            style="border:0" 
+            allowfullscreen 
+            sandbox="allow-storage-access-by-user-activation allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox">
+        </iframe>
+    </div>
+</div>
+
+<style>
+    /* Estilo para que el gráfico sea responsivo y se adapte al móvil */
+    .looker-wrapper {
+        position: relative;
+        overflow: hidden;
+        width: 100%;
+        padding-top: 75%; /* Relación de aspecto 4:3 (puedes ajustarlo) */
+        border-radius: 15px;
+        border: 1px solid #333;
+    }
+
+    .looker-wrapper iframe {
+        position: absolute;
+        top: 0;
+        left: 0;
+        bottom: 0;
+        right: 0;
+        width: 100%;
+        height: 100%;
+    }
+</style>
                 </div>
             </div>
 
@@ -201,10 +234,11 @@
         document.getElementById('user-info').innerHTML = `${APP_DATA.userName} <span class="badge-role">${APP_DATA.role}</span>`;
         if(APP_DATA.role.toLowerCase() === "junta directiva") {
             document.getElementById('admin-tools').style.display = 'block';
+            document.getElementById('stats-container').style.display = 'block';
         }
         updateUI();
     }
-
+    
     // NAVEGACIÓN
     function showSubPanel(id) {
         document.querySelectorAll('#app-container .step-panel').forEach(p => p.classList.remove('active-panel'));
